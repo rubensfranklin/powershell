@@ -2,21 +2,32 @@
 $backupPath = "C:\Users\alanq\Documents\backup"
 $timeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $logs = "C:\LOGS\log.txt"
-$controle = 0
 
-Get-ChildItem $saidaPath | ForEach-Object {
-    $file = $_.Name
-    if (Test-Path "$backupPath\$file") {
-        $arquivos = Get-ChildItem $saidaPath
-        Remove-Item "$saidaPath\$file"   
-        $controle = 1
-    }
- 
-    if ($controle = 1) {
-        Add-Content -Path $logs -Value "[$timeStamp] O arquivo $arquivos foram removido do diretório $saidaPath" 
-        Write-Host "O arquivo $arquivos foi removido do diretório $saidaPath"
+
+$saidaFiles = Get-ChildItem -Path $saidaPath
+$backupFiles = Get-ChildItem -Path $backupPath
+
+$deletedFiles = @()
+
+foreach ($saidaFile in $saidaFiles)
+{
+    $backupFile = $backupFiles | Where-Object { $_.Name -eq $saidaFile.Name }
+    if ($backupFile)
+    {
+        Remove-Item -Path $saidaFile.FullName
+        $deletedFiles += $saidaFile.Name
+        Add-Content -Path "C:\LOGS\log.txt" -Value "[$timeStamp] - O arquivo $saidaFile foi removido do diretório $saidaPath" 
     }
 }
 
+if ($deletedFiles.Count -gt 0)
+{
+    Write-Host "[$timeStamp] - Os seguintes arquivos foram deletados da pasta de SAIDA:"
+    $deletedFiles | ForEach-Object { Write-Host $_ }
+}
+else
+{
+    Write-Host "[$timeStamp] - Não houve arquivos deletados da pasta de SAIDA."
+}
 
  
